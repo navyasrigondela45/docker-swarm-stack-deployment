@@ -1,0 +1,113 @@
+[root@MASTER ~]# cat compose.yaml
+services:
+  PMs:
+    container_name: prime_ministers
+    image: navyasrig/jenkins:nodejs2
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    restart: unless-stopped
+    ports:
+      - "2222:3000"
+    networks:
+      - PM_network
+    volumes:
+      - PM:/PM/navya/
+
+
+  movie:
+    container_name: movie
+    image: navyasrig/jenkins:nginx1
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    restart: unless-stopped
+    ports:
+      - "3333:80"
+    networks:
+      - movie_network
+    volumes:
+      - movie:/movie/navya/
+
+  quiz:
+    container_name: quiz
+    image: navyasrig/jenkins:java1
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    restart: unless-stopped
+    ports:
+      - "4444:8080"
+    networks:
+      - quiz_network
+    volumes:
+      - quiz:/quiz/navya/
+
+  mysql:
+    container_name: mysql
+    image: mysql:8
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+    restart: unless-stopped
+    ports:
+      - "5555:3306"
+    networks:
+      - sql_network
+    volumes:
+      - mysql:/mysql/navya/
+    secrets:
+      - MYSQL_PASSWORD
+      - MYSQL_ROOT_PASSWORD
+    environment:
+      MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: employeedb
+      MYSQL_USER: navya
+
+networks:
+  PM_network:
+    driver: overlay
+  movie_network:
+    driver: overlay
+  quiz_network:
+    driver: overlay
+  sql_network:
+    driver: overlay
+
+volumes:
+  PM:
+  movie:
+  mysql:
+  quiz:
+
+secrets:
+  MYSQL_ROOT_PASSWORD:
+    external: true
+
+  MYSQL_PASSWORD:
+    external: true
